@@ -7,6 +7,7 @@ pub mod sig_utils {
     use std::collections::{BTreeMap};
     use rand::{Rng, rngs::ThreadRng};
     use bls12_381::{Scalar};
+    use crate::{PartyId, Weight, XCoord};
 
     pub fn sample_random_poly(
         rng: &mut ThreadRng,
@@ -51,6 +52,27 @@ pub mod sig_utils {
             consumed_weight += party_weight;
         }
         mapping
+    }
+
+    /// constructs a mapping from party id to private x-coordinate ranges from an AddressBook.
+    /// Rust ranges are bounded inclusively below and exclusively above: [lo, hi)
+    pub fn addr_book_to_private_xs_ranges(
+        addr_book: &BTreeMap<PartyId, Weight>,
+    ) -> BTreeMap<PartyId, (XCoord, XCoord)> {
+        let mut out: BTreeMap<PartyId, (XCoord, XCoord)> = BTreeMap::new();
+        // private share x-coordinates are 1-based (see signer_xs in multiverse_sig.rs)
+        let mut cursor: usize = 1;
+
+        // addr_book maps PartyId -> Weight
+        for (party_id, weight) in addr_book.iter() {
+            let lo: XCoord = cursor as XCoord;
+            cursor += *weight as usize;
+            // store inclusive upper bound, so sign() can do lo..(hi+1)
+            let hi: XCoord = (cursor - 1) as XCoord;
+            out.insert(*party_id, (lo, hi));
+        }
+
+        out
     }
 
     pub fn compute_universe_public_xs(universe: &Universe) -> Vec<Scalar> {

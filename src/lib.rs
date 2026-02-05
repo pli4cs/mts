@@ -22,8 +22,8 @@ type AddressBook = BTreeMap<PartyId, (Weight, Rc<Vec<PartyPublicKey>>)>;
 
 pub mod universe;
 pub mod common;
-//pub mod multiverse_sig;
-//pub mod bls_sig;
+pub mod multiverse_sig;
+pub mod bls_sig;
 pub mod mts;
 
 //lets allow dead code from "library" implementations
@@ -32,4 +32,4 @@ mod utils;
 #[allow(dead_code)]
 mod polynomial;
 #[allow(dead_code)]
-mod kzg;
+pub mod kzg;

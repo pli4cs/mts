@@ -1,9 +1,9 @@
-use multiverse_signatures::{common::sig_utils, multiverse_sig::*, bls_sig::*};
+use multiverse_signatures::{common::sig_utils, multiverse_sig::*, bls_sig::*, kzg::KZGParams};
 use rand::{thread_rng};
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-fn compute_crs(n: usize, k: usize) -> MultiverseParams {
+fn compute_crs(n: usize, k: usize) -> KZGParams {
     let mut rng = thread_rng();
     match k * n {
         x if x <= 10000 => sig_utils::test_setup::<10000>(&mut rng),
@@ -37,9 +37,9 @@ fn bench_multiverse<const N: usize, const K: usize>(c: &mut Criterion) {
 
     let msg_to_sign = "Hello Multiverse";
 
-    //let's collect signatures from 80 out of 100 parties
+    // Collect signatures from all parties in the address book (robust to 0/1-based ids).
     let mut partial_sigs: Vec<MultiversePartialSig> = Vec::new();
-    for id in 1..N {
+    for id in addr_book.keys().copied() {
         partial_sigs.push(dealer.sign(id, msg_to_sign.as_bytes(), &output));
     }
 
@@ -47,7 +47,7 @@ fn bench_multiverse<const N: usize, const K: usize>(c: &mut Criterion) {
         format!("multiverse_sign [N={}, K={}]", N, K).as_str(),
         |b| {
             b.iter(|| dealer.sign(
-                black_box(1),
+                black_box(*addr_book.keys().next().unwrap()),
                 black_box(msg_to_sign.as_bytes()),
                 black_box(&output)));
         },
@@ -90,9 +90,9 @@ fn bench_bls<const N: usize, const K: usize>(c: &mut Criterion) {
 
     let msg_to_sign = "Hello Multiverse";
 
-    //let's collect signatures from 80 out of 100 parties
+    // Collect signatures from all parties in the address book.
     let mut partial_sigs: Vec<BlsPartialSig> = Vec::new();
-    for id in 1..N {
+    for id in addr_book.keys().copied() {
         partial_sigs.push(dealer.sign(id, msg_to_sign.as_bytes(), &output));
     }
 

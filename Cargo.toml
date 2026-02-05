@@ -16,6 +16,8 @@ opt-level = 3
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
+serde_support = []
+b12_381= []
 
 [dependencies]
 pairing = "0.21.0"
